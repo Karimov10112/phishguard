@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block title %}Tahlillar tarixi{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div><h1>Tahlillar tarixi</h1><p>Tizim tomonidan tekshirilgan barcha xatlar.</p></div>
+  <form class="row" method="get">
+    <input type="search" name="q" value="{{ q }}" placeholder="Mavzu yoki jo‘natuvchi" style="width:220px">
+    <select name="verdict" style="width:160px">
+      <option value="">Barcha qarorlar</option>
+      {% for k in VERDICTS %}<option value="{{ k }}" {{ 'selected' if verdict == k }}>{{ k }}</option>{% endfor %}
+    </select>
+    <button class="btn secondary">Filtrlash</button>
+  </form>
+</div>
+<div class="card">
+  {% if rows %}
+  <table>
+    <thead><tr><th>Vaqt</th><th>Mavzu</th><th>Jo‘natuvchi</th><th>Qaror</th><th>Holat</th><th class="num">Risk</th></tr></thead>
+    <tbody>
+    {% for x in rows %}
+      <tr>
+        <td class="small">{{ x.created_at|dt }}</td>
+        <td><a href="{{ url_for('result', aid=x.id) }}">{{ x.subject or '(mavzusiz)' }}</a></td>
+        <td class="small">{{ x.from_addr or '—' }}</td>
+        <td><span class="pill {{ x.verdict }}">{{ x.verdict }}</span></td>
+        <td class="small">{{ STATUS_UZ.get(x.status, x.status) }}{% if x.feedback %}<br><span class="muted">{{ FEEDBACK_UZ[x.feedback] }}</span>{% endif %}</td>
+        <td class="num">{{ '%.3f'|format(x.risk) }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% else %}<p class="muted mb0">Hozircha tahlillar yo‘q. <a href="{{ url_for('index') }}">Birinchi xatni tekshiring</a>.</p>{% endif %}
+</div>
+{% endblock %}

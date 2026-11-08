@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+{% block title %}Natija: {{ r.verdict_label }}{% endblock %}
+{% macro lvl(v) -%}{{ 'lvl-high' if v >= 0.7 else ('lvl-mid' if v >= 0.4 else 'lvl-low') }}{%- endmacro %}
+{% block content %}
+{% set col = {'CLEAN': '#1f9d62', 'SUSPICIOUS': '#d39412', 'PHISHING': '#cf3b3b'}[r.verdict] %}
+<div class="verdict-banner {{ r.verdict }}">
+  <svg class="gauge" width="170" height="104" viewBox="0 0 170 104" role="img" aria-label="Risk Score {{ r.risk_score }}">
+    <path d="M15 90 A70 70 0 0 1 155 90" fill="none" stroke="#e6eaf0" stroke-width="16" stroke-linecap="round"/>
+    <path d="M15 90 A70 70 0 0 1 155 90" fill="none" stroke="{{ col }}" stroke-width="16" stroke-linecap="round"
+          stroke-dasharray="{{ (r.risk_score * 219.9)|round(1) }} 400"/>
+    <text x="85" y="78" text-anchor="middle" font-size="30" font-weight="700" fill="#18212f">{{ '%.2f'|format(r.risk_score) }}</text>
+    <text x="85" y="98" text-anchor="middle" font-size="11" fill="#5d6b7e">Risk Score</text>
+  </svg>
+  <div>
+    <div class="row" style="gap:8px"><span class="pill {{ r.verdict }}">{{ r.verdict }}</span>
+      <span class="pill status">{{ STATUS_UZ.get(r.status, r.status) }}</span>
+      {% if r.feedback %}<span class="pill status">{{ FEEDBACK_UZ[r.feedback] }}</span>{% endif %}</div>
+    <h1>{{ r.verdict_label }}{% if r.verdict == 'PHISHING' %} — xat bloklandi{% elif r.verdict == 'SUSPICIOUS' %} — xat karantinga olindi{% else %} — xat xavfsiz{% endif %}</h1>
+    <div class="meta"><b>Qaror:</b> {{ r.action_uz }}.</div>
+    <div class="meta"><b>Mavzu:</b> {{ r.subject }} · <b>Jo‘natuvchi:</b> {{ r.from_name }} {% if r.from_addr %}&lt;{{ r.from_addr }}&gt;{% else %}ko‘rsatilmagan{% endif %}</div>
+    <div class="meta small">Tahlil vaqti: {{ r.created_at|dt }} · {{ r.elapsed_ms }} ms · ID {{ r.id }}</div>
+  </div>
+</div>
+
+<div class="grid grid-main mt">
+  <div>
+    <div class="card">
+      <h2>Gibrid Risk Score komponentlari</h2>
+      {% for c in r.components %}
+      <div class="comp">
+        <div class="top"><span>{{ c.title }} <span class="muted small">· vazn {{ c.weight }}</span></span><b>{{ '%.3f'|format(c.value) }}</b></div>
+        <div class="bar"><span class="{{ lvl(c.value) }}" style="width: {{ (c.value * 100)|round(1) }}%"></span></div>
+        <div class="muted small">{{ c.desc }}</div>
+      </div>
+      {% endfor %}
+      <div class="formula">Risk = {% for c in r.components %}{{ c.weight }}·{{ '%.3f'|format(c.value) }}{{ ' + ' if not loop.last }}{% endfor %} = <b>{{ '%.3f'|format(r.risk_score) }}</b></div>
+      <div class="scale"><div class="marker" style="left: {{ (r.risk_score * 100)|round(1) }}%"></div></div>
+      <div class="scale-labels"><span>0 · CLEAN</span><span>{{ LOW }} · SUSPICIOUS</span><span>{{ HIGH }} · PHISHING</span><span>1.0</span></div>
+    </div>
+
+    {% if r.warnings %}
+    <div class="card">
+      <h2>Ogohlantirishlar</h2>
+      {% for w in r.warnings %}<div class="warn">{{ w }}</div>{% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="card">
+      <h2>Qaror izohi</h2>
+      <p class="muted small">Yakuniy qaror quyidagi mustaqil belgilar va model natijalarining birgalikdagi bahosiga asoslangan.</p>
+      <div class="kv">
+        <div>ML xulosasi</div><div>{{ 'Phishing ehtimoli yuqori' if r.components[0].value >= 0.7 else 'Phishing ehtimoli past yoki o‘rta' }}</div>
+        <div>Semantik xulosa</div><div>{{ 'Xat mazmuni shubhali niyatga mos' if r.components[1].value >= 0.7 else 'Xat mazmunida kuchli phishing belgisi kam' }}</div>
+        <div>Domen xulosasi</div><div>{{ 'Jo‘natuvchi domeni shubhali' if r.components[2].value >= 0.7 else 'Domen bo‘yicha kuchli xavf topilmadi' }}</div>
+        <div>Havola xulosasi</div><div>{{ 'Havolalar yoki biriktirmalarda xavf bor' if r.components[3].value >= 0.7 else 'Havolalar bo‘yicha kuchli xavf topilmadi' }}</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Havolalar tahlili (S_URL)</h2>
+      {% if r.urls %}
+      <table>
+        <thead><tr><th>Havola</th><th class="num">Ball</th></tr></thead>
+        <tbody>
+        {% for u in r.urls[:15] %}
+          <tr>
+            <td><div class="url">{{ u.url }}</div>
+              {% if u.reasons %}<ul class="reasons small">{% for x in u.reasons %}<li>{{ x }}</li>{% endfor %}</ul>{% else %}<div class="muted small">Shubhali belgi topilmadi</div>{% endif %}</td>
+            <td class="num"><span class="pill {{ 'PHISHING' if u.score >= 0.7 else ('SUSPICIOUS' if u.score >= 0.3 else 'CLEAN') }}">{{ '%.2f'|format(u.score) }}</span></td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+      {% else %}<p class="muted mb0">Xatda havola yo‘q. (BEC xurujlari ko‘pincha havolasiz bo‘ladi — ularni faqat matn tahlili aniqlaydi.)</p>{% endif %}
+      {% if r.attachments %}<p class="small"><b>Biriktirmalar:</b> {{ r.attachments|join(', ') }}</p>{% endif %}
+    </div>
+
+    <div class="card">
+      <h2>Xat matni</h2>
+      <p class="muted small">Ijtimoiy muhandislik iboralari <mark class="hit">sariq</mark> rangda ajratilgan. Xavfsizlik uchun havolalar bosilmaydigan qilingan.</p>
+      <div class="mailbody">{{ r.body_excerpt|highlight(r.drivers) }}</div>
+    </div>
+  </div>
+
+  <div>
+    <div class="card">
+      <h2>Psixologik drayverlar</h2>
+      {% if r.drivers %}
+        {% for d in r.drivers %}
+        <div class="driver"><b>{{ d.name }}</b><div class="chips">{% for h in d.hits %}<span class="chip pos">{{ h }}</span>{% endfor %}</div></div>
+        {% endfor %}
+      {% else %}<p class="muted mb0">Shoshilinchlik, qo‘rquv, vakolat, moliyaviy manfaat yoki maxfiylik iboralari topilmadi.</p>{% endif %}
+    </div>
+
+    <div class="card">
+      <h2>Jo‘natuvchi va domen (S_Domain)</h2>
+      <div class="kv">
+        <div>Domen</div><div>{{ r.domain.domain or '—' }}</div>
+        <div>Reply-To</div><div>{{ r.email.reply_to or '—' }}</div>
+        <div>Autentifikatsiya</div>
+        <div class="chips">
+          {% for k, v in r.domain.auth.items() %}<span class="chip {{ 'ok' if v == 'pass' else ('bad' if v in ('fail', 'softfail') else '') }}">{{ k|upper }}: {{ v }}</span>{% endfor %}
+        </div>
+      </div>
+      {% if r.domain.reasons %}<ul class="reasons small">{% for x in r.domain.reasons %}<li>{{ x }}</li>{% endfor %}</ul>{% endif %}
+    </div>
+
+    <div class="card">
+      <h2>XGBoost: qarorga ta’sir qilgan so‘zlar</h2>
+      <p class="muted small">SHAP hissasi: <span class="chip pos">qizil</span> — phishing tomonga, <span class="chip neg">yashil</span> — xavfsiz tomonga.</p>
+      {% if r.ml_explain %}
+      <div class="chips">{% for f in r.ml_explain %}<span class="chip {{ 'pos' if f.contribution > 0 else 'neg' }}" title="{{ f.contribution }}">{{ f.feature }} {{ '%+.2f'|format(f.contribution) }}</span>{% endfor %}</div>
+      {% else %}<p class="muted mb0">Ma’lumot yo‘q.</p>{% endif %}
+    </div>
+
+    <div class="card">
+      <h2>Amallar</h2>
+      <div class="row">
+        {% if r.status in ('quarantined', 'blocked') %}
+        <form method="post" action="{{ url_for('set_status', aid=r.id) }}"><input type="hidden" name="csrf" value="{{ csrf_token }}"><input type="hidden" name="status" value="released"><button class="btn success small">Karantindan chiqarish</button></form>
+        <form method="post" action="{{ url_for('set_status', aid=r.id) }}"><input type="hidden" name="csrf" value="{{ csrf_token }}"><input type="hidden" name="status" value="deleted"><button class="btn danger small">O‘chirish</button></form>
+        {% endif %}
+        <a class="btn secondary small" href="{{ url_for('result_json', aid=r.id) }}">JSON yuklab olish</a>
+        <a class="btn secondary small" href="{{ url_for('index') }}">Yangi tahlil</a>
+      </div>
+      <h3 class="mt">Natija to‘g‘rimi?</h3>
+      <p class="muted small">Tahlilchi fikri modelni qayta o‘qitish uchun saqlanadi (Statistika → “feedback.csv”).</p>
+      <form class="row" method="post" action="{{ url_for('set_feedback', aid=r.id) }}">
+        <input type="hidden" name="csrf" value="{{ csrf_token }}">
+        <button class="btn secondary small" name="feedback" value="correct">To‘g‘ri</button>
+        <button class="btn secondary small" name="feedback" value="false_positive">Aslida xavfsiz</button>
+        <button class="btn secondary small" name="feedback" value="false_negative">Aslida phishing</button>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

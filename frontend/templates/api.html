@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block title %}REST API{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>REST API</h1><p>Pochta serveri (Postfix/Exim milter), SIEM yoki boshqa tizimlar bilan integratsiya uchun.</p></div></div>
+{% if api_key_required %}<div class="note">API kaliti yoqilgan: har bir so‘rovga <code>X-API-Key: &lt;kalit&gt;</code> sarlavhasini qo‘shing.</div>
+{% else %}<div class="note">API kaliti o‘rnatilmagan (ochiq rejim). Ishlab chiqarishda <code>PHISHGUARD_API_KEY</code> muhit o‘zgaruvchisini bering.</div>{% endif %}
+
+<div class="card mt">
+  <h2>POST /api/v1/analyze — xatni to‘liq tahlil qilish</h2>
+  <p>JSON: <code>raw</code> (to‘liq MIME xat) yoki <code>text</code> + ixtiyoriy <code>subject</code>, <code>sender</code>. Multipart: <code>file</code> (.eml).</p>
+<pre>curl -X POST {{ request.host_url }}api/v1/analyze \
+  -H "Content-Type: application/json" \
+  -d '{"text": "Your account has been suspended. Verify within 24 hours: http://paypal-verify.xyz/login",
+       "subject": "Security alert", "sender": "PayPal &lt;service@paypa1.com&gt;"}'</pre>
+<pre>curl -X POST {{ request.host_url }}api/v1/analyze -F "file=@xat.eml"</pre>
+  <p>Javob (qisqartirilgan):</p>
+<pre>{
+  "id": "3f9a1c2b7e10",
+  "risk_score": 0.812,
+  "verdict": "PHISHING",
+  "action": "block_and_notify_soc",
+  "components": [{"key": "ml", "value": 0.93, "weight": 0.35}, ...],
+  "drivers": [{"key": "fear", "hits": ["account has been suspended"]}, ...],
+  "domain": {"domain": "paypa1.com", "score": 0.5, "reasons": [...]},
+  "urls": [{"url": "http://paypal-verify.xyz/login", "score": 0.9, "reasons": [...]}],
+  "elapsed_ms": 12.4
+}</pre>
+</div>
+
+<div class="card">
+  <h2>POST /api/v1/score — komponentlardan Risk Score hisoblash</h2>
+  <p>Diplom ishidagi 3.1-band namunasi: komponent ballari tashqi modullardan keladi.</p>
+<pre>curl -X POST {{ request.host_url }}api/v1/score -H "Content-Type: application/json" \
+  -d '{"message_id": "&lt;20260311.abc@mail.example.com&gt;", "p_ml": 0.78, "p_bert": 0.92, "s_domain": 0.70, "s_url": 0.00}'
+
+200 OK
+{"message_id": "&lt;20260311.abc@mail.example.com&gt;", "risk_score": 0.7, "verdict": "PHISHING", "action": "block_and_notify_soc"}</pre>
+</div>
+
+<div class="card">
+  <h2>Boshqa endpointlar</h2>
+  <table>
+    <tr><td><code>GET /api/v1/health</code></td><td>Xizmat holati va model versiyasi</td></tr>
+    <tr><td><code>GET /api/v1/results/&lt;id&gt;</code></td><td>Saqlangan tahlil natijasi (to‘liq)</td></tr>
+    <tr><td><code>GET /feedback.csv</code></td><td>Tahlilchi tasdiqlagan xatlar — modelni qayta o‘qitish uchun</td></tr>
+  </table>
+  <h3 class="mt">Qaror qoidalari</h3>
+  <table>
+    <tr><td><span class="pill CLEAN">CLEAN</span></td><td>Risk &lt; {{ LOW }}</td><td><code>deliver_to_inbox</code></td></tr>
+    <tr><td><span class="pill SUSPICIOUS">SUSPICIOUS</span></td><td>{{ LOW }} ≤ Risk &lt; {{ HIGH }}</td><td><code>quarantine_with_banner</code></td></tr>
+    <tr><td><span class="pill PHISHING">PHISHING</span></td><td>Risk ≥ {{ HIGH }}</td><td><code>block_and_notify_soc</code></td></tr>
+  </table>
+</div>
+{% endblock %}

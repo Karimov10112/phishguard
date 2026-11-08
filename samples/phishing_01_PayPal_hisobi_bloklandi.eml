@@ -1,0 +1,35 @@
+From: PayPal Security <service@paypa1-security.com>
+To: user@company.uz
+Subject: Your account has been suspended
+Date: Sun, 08 Nov 2026 01:20:12 +0500
+Message-ID: <8487635685471849810@mail.local>
+Authentication-Results: mx.company.uz; spf=softfail
+ smtp.mailfrom=paypa1-security.com; dkim=none; dmarc=fail
+ header.from=paypa1-security.com
+MIME-Version: 1.0
+Content-Type: multipart/alternative;
+ boundary="===============4967613289907039185=="
+
+--===============4967613289907039185==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+
+Dear Customer,
+We detected unauthorized login to your PayPal account. Your account has been =
+temporarily suspended.
+Verify your account within 24 hours or it will be permanently closed: http://=
+paypal.com.secure-verify.xyz/login
+PayPal Security Team
+
+--===============4967613289907039185==
+Content-Type: text/html; charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+MIME-Version: 1.0
+
+<html><body><p>Dear Customer,</p><p>We detected <b>unauthorized login</b> to =
+your PayPal account. Your account has been temporarily suspended.</p>
+<p>Verify your account within 24 hours or it will be permanently closed.</p><=
+p><a href=3D"http://paypal.com.secure-verify.xyz/login">https://www.paypal.co=
+m/verify</a></p><p>PayPal Security Team</p></body></html>
+
+--===============4967613289907039185==--

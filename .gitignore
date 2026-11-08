@@ -1,0 +1,9 @@
+.venv/
+__pycache__/
+*.pyc
+instance/
+quarantine/
+data/Phishing_Email.csv
+train/roberta_runs/
+models/roberta/
+.pytest_cache/

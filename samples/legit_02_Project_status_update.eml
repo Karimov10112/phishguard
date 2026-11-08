@@ -1,0 +1,19 @@
+From: Anna Smith <anna.smith@northwind.com>
+To: team@northwind.com
+Subject: Project status update
+Date: Sun, 08 Nov 2026 01:20:12 +0500
+Message-ID: <1552567044566238260@mail.local>
+Authentication-Results:
+ mx.northwind.com; spf=pass; dkim=pass header.d=northwind.com; dmarc=pass
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+MIME-Version: 1.0
+
+Hi team,
+The data warehouse migration is on track: 82% of planned tasks are complete. =
+Remaining items are testing and documentation.
+The detailed report is on the project wiki: https://northwind.com/wiki/dwh-mi=
+gration
+Let me know if you have questions.
+Best,
+Anna

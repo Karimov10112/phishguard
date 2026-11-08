@@ -1,0 +1,3 @@
+# Qora ro‘yxat: domen yoki to‘liq URL (har qatorda bittasi).
+# OpenPhish feed: python integrations/update_blacklist.py
+secure-verify.xyz

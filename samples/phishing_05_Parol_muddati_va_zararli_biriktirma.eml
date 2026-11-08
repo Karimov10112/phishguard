@@ -1,0 +1,29 @@
+From: IT Helpdesk <helpdesk@company-it-support.site>
+To: staff@company.uz
+Subject: Password expiry notification
+Date: Sun, 08 Nov 2026 01:20:12 +0500
+Message-ID: <1739044377977755389@mail.local>
+Authentication-Results: mx.company.uz; spf=pass; dkim=none; dmarc=none
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="===============4540178735823269975=="
+
+--===============4540178735823269975==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+
+Dear user,
+Your Office 365 password expires today. To keep using your mailbox, click her=
+e to keep your current password: https://bit.ly/3xK9pQz
+Unverified accounts will be deactivated within 24 hours.
+Also review the attached security policy.
+IT Helpdesk
+
+--===============4540178735823269975==
+Content-Type: application/octet-stream
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="Security_Policy_2026.pdf.exe"
+MIME-Version: 1.0
+
+TVqQACBmYWtl
+
+--===============4540178735823269975==--

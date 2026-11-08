@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block title %}Xatni tahlil qilish{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>Elektron xatni tekshirish</h1>
+    <p>Xat matnini kiriting yoki .eml faylni yuklang — mashinaviy o‘qitish modeli xatni tahlil qilib, phishing ehtimolini hisoblaydi.</p>
+  </div>
+</div>
+
+<div class="grid grid-main">
+  <form class="card" method="post" action="{{ url_for('analyze_view') }}" enctype="multipart/form-data">
+    <input type="hidden" name="csrf" value="{{ csrf_token }}">
+    <div class="grid grid-2">
+      <div class="field">
+        <label for="sender">Jo‘natuvchi (ixtiyoriy)</label>
+        <input type="text" id="sender" name="sender" placeholder="Ism Familiya &lt;manzil@domen.uz&gt;">
+      </div>
+      <div class="field">
+        <label for="subject">Mavzu (ixtiyoriy)</label>
+        <input type="text" id="subject" name="subject" placeholder="Xat mavzusi">
+      </div>
+    </div>
+    <div class="field">
+      <label for="body">Xat matni</label>
+      <textarea id="body" name="body" placeholder="Xat matnini shu yerga joylashtiring. Sarlavhalari bilan to‘liq xatni (From:, Subject:, Authentication-Results: ...) ham joylashtirish mumkin."></textarea>
+    </div>
+    <div class="or">— yoki —</div>
+    <div class="field dropzone">
+      <label for="eml" style="font-weight:600">.eml faylni yuklash</label>
+      <input type="file" id="eml" name="eml" accept=".eml,message/rfc822,.txt">
+      <div class="small">Pochta dasturida xatni “Asl nusxa sifatida saqlash / Download original” orqali .eml qilib oling. Sarlavhalar bilan tahlil aniqroq bo‘ladi.</div>
+    </div>
+    <div class="row">
+      <button class="btn" type="submit">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        Tahlil qilish
+      </button>
+      <span class="muted small">Semantik modul: {{ engine }}</span>
+    </div>
+  </form>
+
+  <div>
+    <div class="card">
+      <h2>Namunaviy xatlar</h2>
+      <p class="muted small">Tizimni sinab ko‘rish uchun tayyor xatlar. Bosganingizda darhol tahlil qilinadi.</p>
+      <div class="samples">
+        {% for s in samples %}
+        <a class="sample" href="{{ url_for('sample', name=s.file) }}">
+          <span>{{ s.title }}</span>
+          <span class="k {{ 'k-phishing' if s.kind == 'phishing' else 'k-legit' }}">{{ 'phishing' if s.kind == 'phishing' else 'xavfsiz' }}</span>
+        </a>
+        {% else %}
+        <p class="muted">Namunalar topilmadi (samples/ papkasi).</p>
+        {% endfor %}
+      </div>
+    </div>
+    <div class="card">
+      <h2>Qanday ishlaydi?</h2>
+      <ol class="steps small">
+        <li>Xat sarlavha, matn, havola va biriktirmalarga ajratiladi (MIME parsing).</li>
+        <li>HTML tozalanadi, ko‘rinishi o‘xshash (homoglyph) harflar normallashtiriladi.</li>
+        <li>XGBoost (P_ML) va semantik model (P_BERT) aldash ehtimolini baholaydi.</li>
+        <li>Jo‘natuvchi domeni (S_Domain) va havolalar (S_URL) tekshiriladi.</li>
+        <li>Komponentlar og‘irlik bilan birlashtirilib, yakuniy Risk Score va uchta qarordan biri chiqariladi.</li>
+      </ol>
+    </div>
+  </div>
+</div>
+{% endblock %}

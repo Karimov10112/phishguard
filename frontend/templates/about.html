@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block title %}Tizim haqida{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Tizim haqida</h1><p>“Machine Learning yordamida phishing xabarlarini aniqlash tizimini yaratish” diplom loyihasining dasturiy qismi.</p></div></div>
+<div class="grid grid-2">
+  <div class="card">
+    <h2>Arxitektura (5 bosqichli Data Pipeline)</h2>
+    <ol class="steps">
+      <li><b>Kiruvchi xat</b> — veb-forma yoki .eml fayl orqali qabul qilinadi.</li>
+      <li><b>Parsing</b> — MIME xat sarlavha, matn (text/HTML), havola va biriktirmalarga ajratiladi; SPF/DKIM/DMARC natijalari o‘qiladi.</li>
+      <li><b>NLP dastlabki ishlov</b> — BeautifulSoup4 bilan HTML tozalash, Unicode NFKC va homoglyph normalizatsiyasi, URL/son tokenlari.</li>
+      <li><b>Klassifikatorlar</b> — TF-IDF (1–2 gramm) + XGBoost → P_ML; semantik niyat modeli → P_BERT; domen tekshiruvi → S_Domain; URL tekshiruvi → S_URL.</li>
+      <li><b>Yakuniy qaror</b> — komponentlar og‘irlik bilan birlashtirilib, Risk Score hisoblanadi; chegaralar {{ LOW }} va {{ HIGH }}.</li>
+    </ol>
+  </div>
+  <div class="card">
+    <h2>Komponentlar</h2>
+    <div class="kv">
+      <div>P_ML</div><div>TF-IDF 10 000 belgi + XGBoost (300 daraxt, max_depth = 6, L1/L2 regulyarizatsiya)</div>
+      <div>P_BERT</div><div>{{ engine }} — xat mazmunining semantik phishing ehtimolini baholaydi.</div>
+      <div>S_Domain</div><div>Jo‘natuvchi domeni, brendga o‘xshashlik, Reply-To va SPF/DKIM/DMARC belgilarini baholaydi.</div>
+      <div>S_URL</div><div>Havoladagi IP-manzil, qisqartiruvchi, punycode, shubhali domen va matn–havola nomuvofiqligini tekshiradi.</div>
+      <div>Drayverlar</div><div>Shoshilinchlik, qo‘rquv, vakolat, moliyaviy manfaat, ma’lumot so‘rash, maxfiylik — o‘zbek, rus va ingliz tillarida</div>
+      <div>Saqlash</div><div>SQLite: tahlillar tarixi va tahlilchi fikrlari</div>
+    </div>
+  </div>
+</div>
+{% if m %}
+<div class="card mt">
+  <h2>O‘qitish to‘plami va metodologiya</h2>
+  <p class="muted small">Model ma’lumotlarning 80 foizida o‘qitilib, 20 foizida stratifikatsiyalangan testdan o‘tkazilgan.</p>
+  <div class="grid grid-4">
+    <div class="stat"><div class="l">Jami xatlar</div><div class="v">{{ m.n_total }}</div></div>
+    <div class="stat"><div class="l">Phishing</div><div class="v" style="color:var(--red)">{{ m.n_phishing }}</div></div>
+    <div class="stat"><div class="l">Xavfsiz</div><div class="v" style="color:var(--green)">{{ m.n_safe }}</div></div>
+    <div class="stat"><div class="l">Test to‘plami</div><div class="v">{{ m.n_test }}</div></div>
+  </div>
+  <div class="kv mt">
+    <div>Matn ishlovi</div><div>HTML tozalash, Unicode/homoglyph normallashtirish, URL va email tokenlari</div>
+    <div>Asosiy model</div><div>TF-IDF (1–2 gramm) + XGBoost</div>
+    <div>Semantik model</div><div>Belgili n-gramm TF-IDF + psixolingvistik drayverlar</div>
+    <div>Baholash</div><div>Accuracy, Precision, Recall, F1, FPR va ROC-AUC</div>
+  </div>
+</div>
+{% endif %}
+<div class="card mt">
+  <h2>Cheklovlar</h2>
+  <ul>
+    <li>Modellar inglizcha ochiq korpus va o‘zbek/rus/ingliz tillaridagi qo‘shimcha to‘plamda o‘qitilgan. Aniqlikni oshirish uchun tahlilchi fikrlari orqali qayta o‘qitish mumkin.</li>
+    <li>Faqat matn kiritilganda sarlavhalar yo‘qligi sababli SPF/DKIM va Reply-To tekshiruvi o‘tkazilmaydi — to‘liq tahlil uchun .eml fayldan foydalaning.</li>
+    <li>Rasm ichidagi matn va QR-kodlar (quishing) hozircha tahlil qilinmaydi.</li>
+  </ul>
+</div>
+{% endblock %}

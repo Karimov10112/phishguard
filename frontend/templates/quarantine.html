@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}Karantin{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div><h1>Karantin</h1><p>Uch darajali karantin moduli: SUSPICIOUS xatlar karantinda turadi, PHISHING xatlar bloklanadi va SOC xabardor qilinadi.</p></div>
+</div>
+<div class="grid grid-3">
+  <div class="card stat"><div class="l">Past xavf (Risk &lt; {{ LOW }})</div><div class="v" style="color:var(--green)">Inbox</div><div class="small muted">Xat foydalanuvchiga yetkaziladi</div></div>
+  <div class="card stat"><div class="l">O‘rta xavf ({{ LOW }} ≤ Risk &lt; {{ HIGH }})</div><div class="v" style="color:#a06c00">Karantin</div><div class="small muted">“Shubhali” banner, havolalar faolsizlantiriladi</div></div>
+  <div class="card stat"><div class="l">Yuqori xavf (Risk ≥ {{ HIGH }})</div><div class="v" style="color:var(--red)">Blok</div><div class="small muted">SOC’ga ogohlantirish, jo‘natuvchi bloklanadi</div></div>
+</div>
+<div class="card mt">
+  <h2>Ko‘rib chiqilishi kerak bo‘lgan xatlar ({{ rows|length }})</h2>
+  {% if rows %}
+  <table>
+    <thead><tr><th>Vaqt</th><th>Mavzu</th><th>Jo‘natuvchi</th><th>Qaror</th><th class="num">Risk</th><th>Amallar</th></tr></thead>
+    <tbody>
+    {% for x in rows %}
+      <tr>
+        <td class="small">{{ x.created_at|dt }}</td>
+        <td><a href="{{ url_for('result', aid=x.id) }}">{{ x.subject or '(mavzusiz)' }}</a></td>
+        <td class="small">{{ x.from_addr or '—' }}</td>
+        <td><span class="pill {{ x.verdict }}">{{ x.verdict }}</span></td>
+        <td class="num">{{ '%.3f'|format(x.risk) }}</td>
+        <td>
+          <div class="row" style="gap:6px">
+            <form method="post" action="{{ url_for('set_status', aid=x.id) }}"><input type="hidden" name="csrf" value="{{ csrf_token }}"><input type="hidden" name="status" value="released"><input type="hidden" name="next" value="{{ url_for('quarantine') }}"><button class="btn success small">Chiqarish</button></form>
+            <form method="post" action="{{ url_for('set_status', aid=x.id) }}"><input type="hidden" name="csrf" value="{{ csrf_token }}"><input type="hidden" name="status" value="deleted"><input type="hidden" name="next" value="{{ url_for('quarantine') }}"><button class="btn danger small">O‘chirish</button></form>
+          </div>
+        </td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% else %}<p class="muted mb0">Karantin bo‘sh.</p>{% endif %}
+</div>
+{% if handled %}
+<div class="card">
+  <h2>Ko‘rib chiqilganlar</h2>
+  <table>
+    <thead><tr><th>Vaqt</th><th>Mavzu</th><th>Qaror</th><th>Holat</th></tr></thead>
+    <tbody>{% for x in handled %}<tr><td class="small">{{ x.created_at|dt }}</td><td><a href="{{ url_for('result', aid=x.id) }}">{{ x.subject or '(mavzusiz)' }}</a></td><td><span class="pill {{ x.verdict }}">{{ x.verdict }}</span></td><td class="small">{{ STATUS_UZ[x.status] }}</td></tr>{% endfor %}</tbody>
+  </table>
+</div>
+{% endif %}
+{% endblock %}
