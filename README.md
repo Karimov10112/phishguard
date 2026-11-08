@@ -58,6 +58,25 @@ Render’ning bepul web service fayl tizimi doimiy emas: `instance/phishguard.db
 restart yoki redeploy’dan keyin yo‘qolishi mumkin. Doimiy tarix kerak bo‘lsa, Render Persistent
 Disk yoki tashqi PostgreSQL storage ulash kerak.
 
+### Hugging Face Spaces’da bepul deploy
+
+Kredit karta talab qilinmaydigan bepul variant sifatida Docker Space ishlatish mumkin.
+Loyihada buning uchun `Dockerfile` va `.dockerignore` tayyorlangan.
+
+1. Hugging Face’da **Create new Space** ni tanlang.
+2. Space SDK sifatida **Docker** va visibility sifatida **Public** yoki **Private** ni tanlang.
+3. Space’ning **Settings → Repository secrets** bo‘limida GitHub token emas, kerak bo‘lsa
+   faqat `PHISHGUARD_SECRET` va `PHISHGUARD_API_KEY` qiymatlarini qo‘shing.
+4. Lokal loyihani Space repository’siga alohida remote orqali push qiling:
+
+   ```bash
+   git remote add hf https://huggingface.co/spaces/<USERNAME>/<SPACE_NAME>
+   git push hf main
+   ```
+
+Space `Dockerfile` ni avtomatik build qiladi va ilovani 7860-portda ishga tushiradi.
+Bepul CPU Space ishlatilmaganda uxlaydi; birinchi ochilishda yuklanishi biroz vaqt olishi mumkin.
+
 ## 2. Imkoniyatlar
 
 | Sahifa | Vazifasi |
